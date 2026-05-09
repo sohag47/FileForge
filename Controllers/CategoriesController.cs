@@ -1,11 +1,10 @@
-﻿using Azure;
-using LearningDotnet.Dto;
-using LearningDotnet.Dto.Category;
-using LearningDotnet.Models.Base;
-using LearningDotnet.Service.Category;
+﻿using FileForge.DTOs;
+using FileForge.DTOs.Category;
+using FileForge.Entities.Base;
+using FileForge.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LearningDotnet.Controllers;
+namespace FileForge.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
