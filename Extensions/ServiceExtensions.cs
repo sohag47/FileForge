@@ -4,9 +4,6 @@ using FileForge.Interfaces;
 using FileForge.Repositories;
 using FileForge.Services;
 using FluentValidation;
-//using FileForge.Service;
-//using FileForge.Service.Category;
-//using FileForge.Validators;
 using Microsoft.AspNetCore.Mvc;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 
@@ -17,9 +14,9 @@ public static class ServiceExtensions
     public static IServiceCollection AddBusinessServices(this IServiceCollection services)
     {
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+        services.AddScoped<IFileUploadService, FileUploadService>();
         services.AddScoped<ICategoryService, CategoryService>();
 
-        //services.AddScoped<IFileUploadService, FileUploadService>();
         //services.AddScoped<IJwtTokenService, JwtTokenService>();
         //services.AddScoped<IProductService, ProductService>();
         //services.AddScoped<IUserService,  UserService>();

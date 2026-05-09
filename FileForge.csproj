@@ -28,10 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
     <Folder Include="Mappers\" />
-    <Folder Include="DTOs\" />
-    <Folder Include="Services\" />
     <Folder Include="Validators\Category\" />
   </ItemGroup>
 
