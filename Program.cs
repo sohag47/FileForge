@@ -1,12 +1,11 @@
 using FileForge.Data;
 using FileForge.Entities.Base;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using FileForge.Extensions;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,10 +18,10 @@ builder.Services.AddCors(options =>
         policy.SetIsOriginAllowed(_ => true)
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials(); // Required for cookies
+              .AllowCredentials();
     });
 });
-//builder.Services.AddBusinessServices();
+builder.Services.AddBusinessServices();
 //builder.Services.AddValidationConfigurations();
 builder.Services.AddControllers()
 .AddJsonOptions(options =>
@@ -31,47 +30,12 @@ builder.Services.AddControllers()
 });
 builder.Services.AddOpenApi();
 
-// jwt
-var jwt = builder.Configuration.GetSection("Jwt");
-var key = Encoding.UTF8.GetBytes(jwt["Key"]!);
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-
-            ValidIssuer = jwt["Issuer"],
-            ValidAudience = jwt["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-
-            ClockSkew = TimeSpan.Zero
-        };
-
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                context.Token = context.Request.Cookies["auth_token"];
-                return Task.CompletedTask;
-            }
-        };
-    });
-
-
 
 // EF Core DB Connection
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Authorization
-//builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
-//builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
-builder.Services.AddAuthorization();
+
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();

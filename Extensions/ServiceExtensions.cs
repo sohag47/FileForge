@@ -13,9 +13,10 @@ public static class ServiceExtensions
 {
     public static IServiceCollection AddBusinessServices(this IServiceCollection services)
     {
+        services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         services.AddScoped<IFileUploadService, FileUploadService>();
-        services.AddScoped<ICategoryService, CategoryService>();
+        
 
         //services.AddScoped<IJwtTokenService, JwtTokenService>();
         //services.AddScoped<IProductService, ProductService>();
