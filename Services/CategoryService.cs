@@ -4,6 +4,9 @@ using FileForge.DTOs.Category;
 using FileForge.Entities;
 using FileForge.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using MiniExcelLibs;
+using System.Formats.Asn1;
+using System.Globalization;
 
 namespace FileForge.Services;
 
@@ -187,4 +190,74 @@ public class CategoryService(ApplicationDbContext context): ICategoryService
         .ToListAsync();
     }
 
+    public async Task<IEnumerable<CategoryResponseDto>> BulkImport(IFormFile file)
+    {
+        // 1. Guard Clauses (Pre-validation)
+        if (file == null || file.Length == 0)
+            throw new Exception("File is empty or missing.");
+
+        var extension = Path.GetExtension(file.FileName).ToLower();
+        if (extension != ".xlsx")
+            throw new Exception("Unsupported file format. Please upload an .xlsx file.");
+
+        // 2. Parse File
+        List<Category> rawData;
+        using (var stream = file.OpenReadStream())
+        {
+            // QueryAsync is excellent for performance with MiniExcel
+            var rows = await stream.QueryAsync<Category>();
+            rawData = rows.ToList();
+        }
+
+        // 3. Row Count Check
+        if (rawData.Count == 0)
+            throw new Exception("The file contains no data rows.");
+
+        // 4. Optimized Single-Pass Processing
+        var responseDtos = new List<CategoryResponseDto>();
+        var entitiesToSave = new List<Entities.Category>();
+
+        foreach (var item in rawData)
+        {
+            bool isNameValid = !string.IsNullOrWhiteSpace(item.Name);
+
+            // Map to Response DTO (Always return to user so they see what happened)
+            responseDtos.Add(new CategoryResponseDto
+            {
+                Id = item.Id,
+                Name = item.Name ?? "N/A",
+                Slug = item.Slug ?? string.Empty,
+                Status = item.Status,
+                ParentId = item.ParentId.GetValueOrDefault(),
+                CreatedAt = item.CreatedAt,
+                UpdatedAt = item.UpdatedAt.GetValueOrDefault()
+            });
+
+            // If valid, prepare for database insert
+            if (isNameValid)
+            {
+                entitiesToSave.Add(new Entities.Category
+                {
+                    Name = item.Name!,
+                    // Ensure Slug is URL friendly even if Excel data is messy
+                    Slug = string.IsNullOrWhiteSpace(item.Slug)
+                           ? item.Name!.ToLower().Replace(" ", "-")
+                           : item.Slug,
+                    ParentId = item.ParentId,
+                    Status = item.Status,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+            }
+        }
+
+        // 5. Bulk Database Operation
+        if (entitiesToSave.Count > 0)
+        {
+            await _context.Categories.AddRangeAsync(entitiesToSave);
+            await _context.SaveChangesAsync();
+        }
+
+        return responseDtos;
+    }
 }

@@ -14,4 +14,5 @@ public interface ICategoryService
     Task<bool> BulkCreate(IEnumerable<CategoryCreateDto> categories);
     Task<bool> BulkUpdate(IEnumerable<CategoryUpdateDto> categories);
     Task <IEnumerable<LookupDto>> Dropdown();
+    Task<IEnumerable<CategoryResponseDto>> BulkImport(IFormFile file);
 }

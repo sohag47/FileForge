@@ -1,8 +1,11 @@
 ﻿using FileForge.DTOs;
 using FileForge.DTOs.Category;
+using FileForge.Entities;
 using FileForge.Entities.Base;
 using FileForge.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using MiniExcelLibs;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FileForge.Controllers;
 
@@ -127,5 +130,24 @@ public class CategoriesController(ICategoryService categoryService) : Controller
     {
         var response = await _categoryService.Dropdown();
         return Ok(ApiResponse<IEnumerable<LookupDto>>.Ok("Category Dropdown found", response));
+    }
+
+    // POST: /categories/import
+    [HttpPost("import")]
+    public async Task<ActionResult> Import(IFormFile file)
+    {
+        try
+        {
+            var result = await _categoryService.BulkImport(file);
+
+            return Ok(ApiResponse<IEnumerable<CategoryResponseDto>>.Ok("File processed successfully", result));
+        }
+        catch (Exception ex)
+        {
+            // Catch the guard clause exceptions
+            return UnprocessableEntity(ApiResponse<string>.Fail(ex.Message, ex.ToString()));
+        }
+    
+
     }
 }

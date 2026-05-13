@@ -22,12 +22,16 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddBusinessServices();
+
+
 //builder.Services.AddValidationConfigurations();
-builder.Services.AddControllers()
-.AddJsonOptions(options =>
-{
+
+
+builder.Services.AddControllers().AddJsonOptions(options => {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
+
+
 builder.Services.AddOpenApi();
 
 
