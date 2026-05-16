@@ -3,8 +3,10 @@ using FileForge.DTOs;
 using FileForge.DTOs.Category;
 using FileForge.Entities;
 using FileForge.Interfaces;
+using FileForge.Mappers;
 using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
+using System.Data;
 using System.Formats.Asn1;
 using System.Globalization;
 
@@ -16,18 +18,8 @@ public class CategoryService(ApplicationDbContext context): ICategoryService
 
     public async Task<IEnumerable<CategoryResponseDto>> GetAll()
     {
-        return await _context.Categories.AsNoTracking()
-        .Select(item => new CategoryResponseDto
-        {
-            Id = item.Id,
-            Name = item.Name,
-            Slug = item.Slug,
-            Status = item.Status,
-            ParentId = item.ParentId.GetValueOrDefault(),
-            CreatedAt = item.CreatedAt,
-            UpdatedAt = item.UpdatedAt.GetValueOrDefault()
-        })
-        .ToListAsync();
+        var categories = await _context.Categories.AsNoTracking().ToListAsync();
+        return categories.Select(user => CategoryMapper.ToCollection(user)).ToList();
     }
 
     public async Task<CategoryResponseDto?> GetById(int id)
@@ -35,16 +27,7 @@ public class CategoryService(ApplicationDbContext context): ICategoryService
         var category = await _context.Categories.FindAsync(id);
         if (category == null) return null;
 
-        return new CategoryResponseDto
-        {
-            Id = category.Id,
-            Name = category.Name,
-            Slug = category.Slug,
-            Status = category.Status,
-            ParentId = category.ParentId.GetValueOrDefault(),
-            CreatedAt = category.CreatedAt,
-            UpdatedAt = category.UpdatedAt.GetValueOrDefault()
-        };
+        return CategoryMapper.ToItem(category);
     }
 
     public async Task<CategoryResponseDto> Create(CategoryCreateDto categoryDto)
@@ -60,16 +43,7 @@ public class CategoryService(ApplicationDbContext context): ICategoryService
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
 
-        return new CategoryResponseDto
-        {
-            Id = category.Id,
-            Name = category.Name,
-            Slug = category.Slug,
-            Status = category.Status,
-            ParentId = category.ParentId.GetValueOrDefault(),
-            CreatedAt = category.CreatedAt,
-            UpdatedAt = category.UpdatedAt.GetValueOrDefault()
-        };
+        return CategoryMapper.ToItem(category);
     }
 
     public async Task<CategoryResponseDto?> Update(int id, CategoryUpdateDto categoryDto)
@@ -96,16 +70,7 @@ public class CategoryService(ApplicationDbContext context): ICategoryService
 
         await _context.SaveChangesAsync();
 
-        return new CategoryResponseDto
-        {
-            Id = existingCategory.Id,
-            Name = existingCategory.Name,
-            Slug = existingCategory.Slug,
-            Status = existingCategory.Status,
-            ParentId = existingCategory.ParentId.GetValueOrDefault(),
-            CreatedAt = existingCategory.CreatedAt,
-            UpdatedAt = existingCategory.UpdatedAt.GetValueOrDefault()
-        };
+        return CategoryMapper.ToItem(existingCategory);
     }
 
     public async Task<bool> Delete(int id)
@@ -227,7 +192,7 @@ public class CategoryService(ApplicationDbContext context): ICategoryService
                 Id = item.Id,
                 Name = item.Name ?? "N/A",
                 Slug = item.Slug ?? string.Empty,
-                Status = item.Status,
+                Status = item.Status.ToString(),
                 ParentId = item.ParentId.GetValueOrDefault(),
                 CreatedAt = item.CreatedAt,
                 UpdatedAt = item.UpdatedAt.GetValueOrDefault()
